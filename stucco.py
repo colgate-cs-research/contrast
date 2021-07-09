@@ -70,6 +70,7 @@ def support(arr):
     Returns:
         float: support score; ranges from 0 to 1.
     """
+    #print("Contigency Matrix arr[0][0]:"+str(arr[0][0])+" arr[0][1]:"+str(arr[0][1]) +" arr[1][0]:"+str(arr[1][0])+" arr[1][1]:"+str(arr[1][1])+" arr.sum:"+str(arr.sum(dtype=float)))
     return arr[0][0] / arr.sum(dtype=float)
 
 
@@ -85,6 +86,30 @@ def confidence(arr):
     """
     count = arr[0][0]
     return max(count / arr[0, :].sum(), count / arr[:, 0].sum())
+
+def recall(arr):
+    '''
+    Computes the RECALL
+    RECALL=> true positives / true positives +false negatives.
+    True positives: where the rule A applies and group feature B is satisfied
+    False negatives: where rule A applies but group-feature B is not satisfied
+
+    so,
+    RECALL= { (rule A = true) & (group feature B = true) }/ (rule A = true)
+    '''
+    true_positives=arr[0][0]
+    false_negatives=arr[0][1]
+    return true_positives/(true_positives+false_negatives)
+
+def precision(arr):
+    '''
+    Computes the precision
+    We are trying to find the effectiveness of rule A predicting group-feature B.
+     true positives / (true + false) positives
+    '''
+    true_positive=arr[0][0]
+    false_positive=arr[1][0]
+    return true_positive/(true_positive+false_positive)
 
 
 def read_parquet(folder, max_files=None):
@@ -425,6 +450,8 @@ class ContrastSetLearner:
                 support_out = support(two_by_two)
                 lift_out = lift(two_by_two)
                 conf_out = confidence(two_by_two)
+                recall_out = recall(two_by_two)
+                precision_out = precision(two_by_two)
 
                 # assert the statistical outputs exceed the cutoffs
                 conditions = [support_out > min_support,
@@ -434,12 +461,12 @@ class ContrastSetLearner:
                 # append good rules, and its group, to what will be a DataFrame
                 if all(conditions):
                     group = state_positions[col_num]
-                    row = {'rule': rule, 'group': group, 'lift': lift_out}
+                    row = {'rule': rule, 'group': group,'precision':precision_out,'recall':recall_out}
                     data.append(row)
                     logging.info('{} / {}: {}'.format(i, len(self.counts), row))
 
         # save the resulting rules to a DataFrame and sort by lift
         frame = pd.DataFrame(data)
         if len(frame) > 0:
-            frame.sort_values('lift', ascending=False, inplace=True)
+            frame.sort_values(by='precision', ascending=False, inplace=True)
         return frame
