@@ -461,12 +461,23 @@ class ContrastSetLearner:
                 # append good rules, and its group, to what will be a DataFrame
                 if all(conditions):
                     group = state_positions[col_num]
-                    row = {'rule': rule, 'group': group,'precision':precision_out,'recall':recall_out}
+                    row = {'rule': rule, 'group': group,'precision':precision_out,'recall':recall_out,'frequency':two_by_two[0][0]}
                     data.append(row)
                     logging.info('{} / {}: {}'.format(i, len(self.counts), row))
+        
+        
+
+
 
         # save the resulting rules to a DataFrame and sort by lift
         frame = pd.DataFrame(data)
+        s1 = frame['precision']
+        s2 = frame['recall']
+        s3 = frame['frequency']                            # i.e. "is odd"
+        #s4 = np.where(s3, -frame['number'], frame['number'])  # i.e. "negate if odd"
+
+        
         if len(frame) > 0:
-            frame.sort_values(by='precision', ascending=False, inplace=True)
+            frame = frame.iloc[np.lexsort((s3, s2, s1))]
+            #frame.sort_values(by='precision', ascending=False, inplace=True)
         return frame
