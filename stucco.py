@@ -98,7 +98,7 @@ def recall(arr):
     RECALL= { (rule A = true) & (group feature B = true) }/ (rule A = true)
     '''
     true_positives=arr[0][0]
-    false_negatives=arr[0][1]
+    false_negatives=arr[1][0]
     return true_positives/(true_positives+false_negatives)
 
 def precision(arr):
@@ -108,7 +108,7 @@ def precision(arr):
      true positives / (true + false) positives
     '''
     true_positive=arr[0][0]
-    false_positive=arr[1][0]
+    false_positive=arr[0][1]
     return true_positive/(true_positive+false_positive)
 
 
@@ -428,6 +428,7 @@ class ContrastSetLearner:
 
             # for each group (column), extract-out all other columns
             for col_num in range(np.shape(contingency_matrix)[1]):
+                logging.debug('Group {}'.format(state_positions[col_num]))
                 this_column = contingency_matrix[:, col_num][:, np.newaxis]
                 not_columns = np.delete(contingency_matrix, col_num, axis=1)
 
@@ -464,10 +465,7 @@ class ContrastSetLearner:
                     row = {'rule': rule, 'group': group,'precision':precision_out,'recall':recall_out,'frequency':two_by_two[0][0]}
                     data.append(row)
                     logging.info('{} / {}: {}'.format(i, len(self.counts), row))
-        
-        
-
-
+                    logging.info('{}'.format(two_by_two.tolist()))
 
         # save the resulting rules to a DataFrame and sort by lift
         frame = pd.DataFrame(data)
